@@ -38,38 +38,67 @@ class Player {
 }
 
 class AIPlayer extends Player {
-    constructor() {
+    constructor(playerType) {
+        super();
+        this.playerType = playerType;
         this.positins = [];
     }
 
-    IsWinning(player) {
+    isWinning(player) {
+        if (player.length === 0) {
+            let isWinning = false;
+            let locations = []
+            let found;
 
-        let isWinning = false;
-        let locations = []
-
-        winningCondition.forEach((condition) => {
-            found = 0;
-            condition.forEach((value) => {
-                player.forEach((play) => {
-                    if (value === play) {
-                        found++;
-                        if (found === 2) {
-                            isWinning = true;
-                            locations.push(condition);
+            winningCondition.forEach((condition) => {
+                found = 0;
+                condition.forEach((value) => {
+                    player.forEach((play) => {
+                        if (value === play) {
+                            found++;
+                            if (found === 2) {
+                                isWinning = true;
+                                locations.push(condition);
+                            }
+                            if (found === 3) {
+                                locations.pop(condition);
+                            }
                         }
-                        if (found === 3) {
-                            locations.pop(condition);
-                        }
-                    }
+                    });
                 });
             });
-        });
-        if (isWinning)
-            return { location };
-        else
+            if (isWinning)
+                return { location };
+        } else
             return false;
 
     }
+
+    getTheBestSpot(table) {
+        const gameTable = table.querySelectorAll("td");
+        let allSpots = [];
+        let avaylableSpots = [];
+
+        winningCondition.forEach(condition => {
+            condition.forEach(value => {
+                allSpots.push(value);
+            });
+        });
+
+        console.log('TCL: AIPlayer -> getTheBestSpot -> gameTable', gameTable);
+        gameTable.forEach((cell) => {
+            if (cell.innerHTML != '') {
+                allSpots.forEach(spot => {
+                    if (spot === cell.id) {
+
+                    }
+                });
+            }
+        });
+        console.log('TCL: AIPlayer -> getTheBestSpot -> avaylableSpots', avaylableSpots);
+
+    }
+
     moveIA(isWinning, player) {
         location = winningCondition;
         if (isWinning) {
@@ -79,39 +108,38 @@ class AIPlayer extends Player {
                     this.move(positin);
                 }
             })
+        } else {
+            winningCondition.forEach((condition) => {
+                found = 0;
+                condition.forEach((value) => {
+                    player.forEach((play) => {
+                        if (value === play) {
+                            locations.pop(condition);
+                        }
+                    });
+                });
+            });
+
+
+            let modeMap = {};
+            let maxEl = array[0],
+                maxCount = 1;
+
+            for (let i = 0; i < array.length; i++) {
+                let el = array[i];
+                if (modeMap[el] == null)
+                    modeMap[el] = 1;
+                else
+                    modeMap[el]++;
+                if (modeMap[el] > maxCount) {
+                    maxEl = el;
+                    maxCount = modeMap[el];
+                }
+            }
+            return maxEl;
+
+
         }
-        console.log('am mutat');
-        //     else {
-        //         winningCondition.forEach((condition) => {
-        //             found = 0;
-        //             condition.forEach((value) => {
-        //                 player.forEach((play) => {
-        //                     if (value === play) {
-        //                         locations.pop(condition);
-        //                     }
-        //                 });
-        //             });
-        //         });
-
-
-        //         let modeMap = {};
-        //         let maxEl = array[0], maxCount = 1;
-
-        //         for(let i = 0; i < array.length; i++) {
-        //             let el = array[i];
-        //             if(modeMap[el] == null)
-        //                 modeMap[el] = 1;
-        //             else
-        //                 modeMap[el]++;  
-        //             if(modeMap[el] > maxCount) {
-        //                 maxEl = el;
-        //                 maxCount = modeMap[el];
-        //             }
-        //         }
-        //         return maxEl;
-
-
-        //     }
     }
 }
 
@@ -171,39 +199,98 @@ const table = document.querySelector('table');
 const resetBtn = document.getElementById('resetBtn');
 
 let game = new Game(table);
+let playerX;
+let playerO;
+
+// const playerStart = Math.random() < 0.5 ? true : false;
+
+// if (playerStart) {
+playerX = new Player('X');
+playerO = new AIPlayer('O');
+// } else {
+//     playerX = new AIPlayer('X');
+//     playerO = new Player('O');
+//     playerX.moveIA();
+// }
 
 
-// const playerX = Math.random() < 0.5 ? new Player('X') : new AIPlayer('X');
-// const playerO = playerX instanceof Player() ? new AIPlayer('0') : new Player('0');
+console.log('TCL: playerX', playerX);
+console.log('TCL: playerO', playerO);
 
-const playerX = new Player('X');
-const playerO = new Player('0');
-let playerXTurn;
+
+
+// const playerX = new Player('X');
+// const playerO = new Player('0');
+let playerXTurn = false;
 
 let winner = false;
 
 
 table.addEventListener('click', (ev) => {
+
     if (ev.target.innerHTML === '') {
 
-        if (!game.gameNotStarted())
+        if (!game.gameNotStarted()) {
             playerXTurn = true;
+        }
 
-        playerTurn = playerXTurn ? playerX : playerO;
-        playerTurn.move(ev.target);
-        winner = game.getWinner(playerTurn.getMoves(table));
+        // playerTurn = playerXTurn ? playerX : playerO;
+        // playerTurn.move(ev.target);
+        playerX.move(ev.target);
+        playerO.isWinning(playerO.getMoves(table));
+        console.log('TCL: playerO.getMoves(table)', playerO.getMoves(table));
+        console.log('TCL: playerO.isWinning(O);', playerO.isWinning('O'));
+        // playerO.isWinning('X');
+        console.log('TCL: playerO.isWinning(X)', playerO.isWinning('X'));
+        playerO.getTheBestSpot(table);
+        winner = game.getWinner(playerX.getMoves(table));
 
         if (winner) {
             setTimeout(() => {
-                alert(`WINNER!!! ${playerTurn.getPlayer()}`);
-                window.confirm('Game will reset!') ?
-                    game.restartGame(table) :
+                alert(`WINNER!!! ${playerX.getPlayer()}`);
+
+                if (window.confirm('Game will reset!')) {
+                    // playerStart = Math.random() < 0.5 ? true : false;
+                    // if (playerStart) {
+                    // playerX = new Player('X');
+                    // playerO = new AIPlayer('O');
+                    // } else {
+                    //     playerX = new AIPlayer('X');
+                    //     playerO = new Player('O');
+                    //     playerX.moveIA();
+                    // }
                     game.restartGame(table);
+                } else {
+                    // playerStart = Math.random() < 0.5 ? true : false;
+                    // if (playerStart) {
+                    // playerX = new Player('X');
+                    // playerO = new AIPlayer('O');
+                    // } else {
+                    //     playerX = new AIPlayer('X');
+                    //     playerO = new Player('O');
+                    //     playerX.movmoveIAe();
+                    // }
+                    game.restartGame(table);
+                }
             });
         }
 
-        playerXTurn = !playerXTurn;
+        // playerXTurn = !playerXTurn;
     }
 })
 
-resetBtn.addEventListener('click', () => game.restartGame(table));
+resetBtn.addEventListener('click', () => {
+    game.restartGame(table);
+
+    // playerStart = Math.random() < 0.5 ? true : false;
+    // if (playerStart) {
+    playerX = new Player('X');
+    playerO = new AIPlayer('O');
+
+    // } else {
+    //     playerX.moveIA();
+    //     playerX = new AIPlayer('X');
+    //     playerO = new Player('O');
+    // }
+
+});
